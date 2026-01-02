@@ -1,21 +1,27 @@
 import { useState } from "react";
 import { WeatherIcon } from "./WeatherIcon";
-import { Wind, Droplets, Home, Users, Settings } from "lucide-react";
+import { Wind, Droplets, Grid3X3, User, Users, BarChart3, Settings, Moon, Sun, Bell } from "lucide-react";
 
 type TemperatureUnit = "celsius" | "fahrenheit";
 type ForecastRange = "4 Days" | "15 Days" | "30 Days";
 
 const forecastData = [
-  { day: "Wednesday, July 12", condition: "partly-cloudy" as const, temp: 19 },
-  { day: "Thursday, July 13", condition: "rain" as const, temp: 17 },
-  { day: "Friday, July 14", condition: "rain" as const, temp: 17 },
-  { day: "Saturday, July 15", condition: "sunny" as const, temp: 22 },
-  { day: "Sunday, July 16", condition: "sunny" as const, temp: 24 },
+  { day: "Wednesday, July 12", condition: "partly-cloudy" as const, temp: 18, weather: "Cloudy" },
+  { day: "Thursday, July 13", condition: "rain" as const, temp: 16, weather: "Rain" },
+  { day: "Friday, July 14", condition: "thunderstorm" as const, temp: 17, weather: "Thunderstorm" },
+  { day: "Saturday, July 15", condition: "sunny" as const, temp: 22, weather: "Sunny" },
+  { day: "Sunday, July 16", condition: "sunny" as const, temp: 24, weather: "Sunny" },
 ];
 
-export const ForecastSidebar = () => {
+interface ForecastSidebarProps {
+  isDarkMode?: boolean;
+  onToggleTheme?: () => void;
+}
+
+export const ForecastSidebar = ({ isDarkMode = true, onToggleTheme }: ForecastSidebarProps) => {
   const [unit, setUnit] = useState<TemperatureUnit>("celsius");
   const [range, setRange] = useState<ForecastRange>("4 Days");
+  const [activeNav, setActiveNav] = useState(0);
 
   const convertTemp = (temp: number) => {
     if (unit === "fahrenheit") {
@@ -26,14 +32,44 @@ export const ForecastSidebar = () => {
 
   const unitSymbol = unit === "celsius" ? "°C" : "°F";
 
+  const navItems = [
+    { icon: Grid3X3, label: "Dashboard" },
+    { icon: User, label: "Profile" },
+    { icon: Users, label: "Community" },
+    { icon: BarChart3, label: "Analytics" },
+    { icon: Settings, label: "Settings" },
+  ];
+
   return (
-    <div className="sidebar-light h-full flex flex-col rounded-l-3xl shadow-2xl">
-      {/* User avatar */}
-      <div className="flex justify-end p-4">
-        <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
-            <span className="text-primary-foreground text-sm font-medium">J</span>
+    <div className="sidebar-blue h-full flex flex-col rounded-l-3xl shadow-2xl">
+      {/* Top bar with toggle, notification, and profile */}
+      <div className="flex items-center justify-end gap-3 p-4">
+        {/* Dark/Light mode toggle */}
+        <button
+          onClick={onToggleTheme}
+          className="relative w-14 h-7 bg-white/20 rounded-full p-1 flex items-center transition-colors"
+        >
+          <div className={`absolute w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-300 flex items-center justify-center ${isDarkMode ? 'translate-x-0' : 'translate-x-7'}`}>
+            {isDarkMode ? (
+              <Moon className="w-3 h-3 text-sidebar-bg" />
+            ) : (
+              <Sun className="w-3 h-3 text-yellow-500" />
+            )}
           </div>
+        </button>
+
+        {/* Notification bell */}
+        <button className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors">
+          <Bell className="w-4 h-4 text-white" />
+        </button>
+
+        {/* Profile avatar */}
+        <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/30">
+          <img 
+            src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" 
+            alt="Profile"
+            className="w-full h-full object-cover"
+          />
         </div>
       </div>
 
@@ -42,19 +78,25 @@ export const ForecastSidebar = () => {
         <div className="flex justify-center mb-2">
           <WeatherIcon condition="partly-cloudy" size="xl" />
         </div>
-        <div className="text-5xl font-bold text-sidebar-foreground mb-1">
-          {convertTemp(20)}{unitSymbol}
+        <div className="text-5xl font-bold text-white mb-1">
+          {convertTemp(20)}<sup className="text-2xl">o</sup> C
         </div>
-        <div className="text-muted-foreground text-sm mb-4">Partly Cloudy</div>
+        <div className="text-white/70 text-sm mb-4">Partly Cloudy</div>
         
         <div className="flex justify-center gap-6 text-sm">
           <div className="flex items-center gap-2">
-            <Wind className="w-4 h-4 text-primary" />
-            <span className="text-muted-foreground">20 Km/h</span>
+            <div className="flex flex-col items-center">
+              <Wind className="w-4 h-4 text-white/60 mb-1" />
+              <span className="text-white/60 text-xs">Wind</span>
+            </div>
+            <span className="text-white font-medium">20 Km/h</span>
           </div>
           <div className="flex items-center gap-2">
-            <Droplets className="w-4 h-4 text-weather-rain" />
-            <span className="text-muted-foreground">15%</span>
+            <div className="flex flex-col items-center">
+              <Droplets className="w-4 h-4 text-white/60 mb-1" />
+              <span className="text-white/60 text-xs">Hum</span>
+            </div>
+            <span className="text-white font-medium">15%</span>
           </div>
         </div>
       </div>
@@ -62,14 +104,14 @@ export const ForecastSidebar = () => {
       {/* Forecast section */}
       <div className="flex-1 px-4 overflow-hidden">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-sidebar-foreground">Weather Forecast</h3>
+          <h3 className="font-semibold text-white">Weather Forecast</h3>
           <select 
             value={unit}
             onChange={(e) => setUnit(e.target.value as TemperatureUnit)}
-            className="text-xs bg-muted/30 border border-border/30 rounded-md px-2 py-1 text-sidebar-foreground"
+            className="text-xs bg-white/10 border border-white/20 rounded-md px-2 py-1 text-white appearance-none cursor-pointer"
           >
-            <option value="celsius">Celsius</option>
-            <option value="fahrenheit">Fahrenheit</option>
+            <option value="celsius" className="bg-sidebar-bg text-white">Celsius</option>
+            <option value="fahrenheit" className="bg-sidebar-bg text-white">Fahrenheit</option>
           </select>
         </div>
 
@@ -82,7 +124,7 @@ export const ForecastSidebar = () => {
               className={`flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-all ${
                 range === r
                   ? "forecast-tab-active"
-                  : "forecast-tab hover:bg-muted/50"
+                  : "forecast-tab hover:bg-white/20"
               }`}
             >
               {r}
@@ -95,26 +137,23 @@ export const ForecastSidebar = () => {
           {forecastData.map((item, index) => (
             <div
               key={index}
-              className={`flex items-center justify-between p-3 rounded-xl transition-all ${
-                index === 0 ? "bg-primary text-primary-foreground" : "hover:bg-muted/30"
-              }`}
+              className="flex items-center justify-between p-3 rounded-xl transition-all hover:bg-white/10"
             >
               <div className="flex items-center gap-3">
                 <WeatherIcon 
                   condition={item.condition} 
                   size="sm" 
-                  className={index === 0 ? "text-primary-foreground" : ""}
                 />
                 <div>
-                  <div className={`text-sm font-medium ${index === 0 ? "" : "text-sidebar-foreground"}`}>
+                  <div className="text-sm font-medium text-white">
                     {item.day.split(",")[0]}
                   </div>
-                  <div className={`text-xs ${index === 0 ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
-                    {item.day.split(",")[1]}
+                  <div className="text-xs text-white/50">
+                    {item.weather}
                   </div>
                 </div>
               </div>
-              <div className={`text-lg font-semibold ${index === 0 ? "" : "text-sidebar-foreground"}`}>
+              <div className="text-lg font-semibold text-white">
                 {convertTemp(item.temp)}{unitSymbol}
               </div>
             </div>
@@ -124,16 +163,21 @@ export const ForecastSidebar = () => {
 
       {/* Bottom navigation */}
       <div className="p-4">
-        <div className="flex justify-center gap-3 bg-sidebar-foreground rounded-full p-2">
-          <button className="p-3 rounded-full bg-primary text-primary-foreground">
-            <Home className="w-5 h-5" />
-          </button>
-          <button className="p-3 rounded-full text-muted-foreground hover:text-foreground transition-colors">
-            <Users className="w-5 h-5" />
-          </button>
-          <button className="p-3 rounded-full text-muted-foreground hover:text-foreground transition-colors">
-            <Settings className="w-5 h-5" />
-          </button>
+        <div className="flex justify-center gap-2 bottom-nav-bar rounded-full p-2">
+          {navItems.map((item, index) => (
+            <button
+              key={index}
+              onClick={() => setActiveNav(index)}
+              className={`p-3 rounded-full transition-all ${
+                activeNav === index
+                  ? "bg-primary text-white"
+                  : "text-white/60 hover:text-white hover:bg-white/10"
+              }`}
+              title={item.label}
+            >
+              <item.icon className="w-5 h-5" />
+            </button>
+          ))}
         </div>
       </div>
     </div>
