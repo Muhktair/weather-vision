@@ -1,11 +1,15 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { MainDashboard } from "@/components/MainDashboard";
+import { ForecastSidebar } from "@/components/ForecastSidebar";
 
 const Index = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+    <div className="flex h-screen overflow-hidden">
+      {/* Main Dashboard - Left Side */}
+      <MainDashboard />
+      
+      {/* Sidebar - Right Side */}
+      <div className="hidden lg:block w-80 xl:w-96 flex-shrink-0">
+        <ForecastSidebar />
       </div>
     </div>
   );
