@@ -1,22 +1,37 @@
 import { useState, useEffect } from "react";
-import { ChevronDown, MapPin } from "lucide-react";
+import { ChevronDown, MapPin, Navigation, Menu } from "lucide-react";
 import { WeatherIcon } from "./WeatherIcon";
 import mountainsBg from "@/assets/mountains-bg.png";
 import { HourlyForecast } from "./HourlyForecast";
 import { MonthlyRainfall } from "./MonthlyRainfall";
 import { WorldWeatherMap } from "./WorldWeatherMap";
+import { useGeolocation } from "@/hooks/useGeolocation";
 
-const locations = [
+const defaultLocations = [
   "Lagos, Nigeria",
   "Abuja, Nigeria",
   "Port Harcourt, Nigeria",
   "Kano, Nigeria",
 ];
 
-export const MainDashboard = () => {
+interface MainDashboardProps {
+  onMenuClick?: () => void;
+}
+
+export const MainDashboard = ({ onMenuClick }: MainDashboardProps) => {
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [location, setLocation] = useState(locations[0]);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+  const [manualLocation, setManualLocation] = useState<string | null>(null);
+  
+  const { city, country, loading: geoLoading, error: geoError, requestLocation } = useGeolocation();
+
+  // Determine current location display
+  const currentLocation = manualLocation || (city && country ? `${city}, ${country}` : "Lagos, Nigeria");
+  
+  // Build locations list with detected location at top
+  const locations = city && country 
+    ? [`${city}, ${country}`, ...defaultLocations.filter(loc => loc !== `${city}, ${country}`)]
+    : defaultLocations;
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -48,6 +63,12 @@ export const MainDashboard = () => {
     return "Good Evening";
   };
 
+  const handleUseMyLocation = () => {
+    requestLocation();
+    setManualLocation(null);
+    setShowLocationDropdown(false);
+  };
+
   return (
     <div 
       className="flex-1 min-h-screen p-6 lg:p-8 overflow-y-auto relative"
@@ -59,10 +80,20 @@ export const MainDashboard = () => {
     >
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-start justify-between mb-8">
-        <div>
-          <h1 className="text-2xl lg:text-3xl font-semibold text-foreground mb-4">
-            {getGreeting()}, <span className="text-primary">John</span>
-          </h1>
+        <div className="flex-1">
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-2xl lg:text-3xl font-semibold text-foreground">
+              {getGreeting()}, <span className="text-primary">John</span>
+            </h1>
+            
+            {/* Mobile menu button */}
+            <button 
+              onClick={onMenuClick}
+              className="lg:hidden p-2 rounded-full bg-primary/20 hover:bg-primary/30 transition-colors"
+            >
+              <Menu className="w-6 h-6 text-primary" />
+            </button>
+          </div>
           
           {/* Location selector */}
           <div className="relative inline-block">
@@ -71,21 +102,39 @@ export const MainDashboard = () => {
               className="flex items-center gap-2 bg-primary/20 hover:bg-primary/30 transition-colors rounded-full px-4 py-2 text-sm"
             >
               <MapPin className="w-4 h-4 text-primary" />
-              <span>{location}</span>
+              <span>
+                {geoLoading ? "Detecting location..." : currentLocation}
+              </span>
               <ChevronDown className="w-4 h-4" />
             </button>
             
             {showLocationDropdown && (
-              <div className="absolute top-full mt-2 left-0 bg-card border border-border rounded-xl shadow-xl z-50 min-w-48 overflow-hidden">
+              <div className="absolute top-full mt-2 left-0 bg-card border border-border rounded-xl shadow-xl z-50 min-w-56 overflow-hidden">
+                {/* Use my location button */}
+                <button
+                  onClick={handleUseMyLocation}
+                  className="w-full text-left px-4 py-3 text-sm hover:bg-muted/50 transition-colors flex items-center gap-2 border-b border-border/50"
+                >
+                  <Navigation className="w-4 h-4 text-primary" />
+                  <span className="text-primary font-medium">Use my location</span>
+                  {geoLoading && <span className="text-xs text-muted-foreground ml-auto">detecting...</span>}
+                </button>
+                
+                {geoError && (
+                  <div className="px-4 py-2 text-xs text-destructive bg-destructive/10">
+                    {geoError}
+                  </div>
+                )}
+                
                 {locations.map((loc) => (
                   <button
                     key={loc}
                     onClick={() => {
-                      setLocation(loc);
+                      setManualLocation(loc);
                       setShowLocationDropdown(false);
                     }}
                     className={`w-full text-left px-4 py-3 text-sm hover:bg-muted/50 transition-colors ${
-                      loc === location ? "bg-primary/20 text-primary" : ""
+                      loc === currentLocation ? "bg-primary/20 text-primary" : ""
                     }`}
                   >
                     {loc}
@@ -122,7 +171,7 @@ export const MainDashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Hourly Forecast - Full width on mobile, half on desktop */}
         <div className="lg:col-span-2">
-          <HourlyForecast location={location.split(",")[0]} />
+          <HourlyForecast location={currentLocation.split(",")[0]} />
         </div>
 
         {/* Monthly Rainfall */}
