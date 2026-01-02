@@ -7,10 +7,10 @@ import { MonthlyRainfall } from "./MonthlyRainfall";
 import { WorldWeatherMap } from "./WorldWeatherMap";
 
 const locations = [
-  "Rajshahi, Bangladesh",
-  "Dhaka, Bangladesh",
-  "Chittagong, Bangladesh",
-  "Khulna, Bangladesh",
+  "Lagos, Nigeria",
+  "Abuja, Nigeria",
+  "Port Harcourt, Nigeria",
+  "Kano, Nigeria",
 ];
 
 export const MainDashboard = () => {
